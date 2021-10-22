@@ -1,0 +1,62 @@
+/*
+ * i2c.c
+ *
+ * Created: 13-10-2021 16:29:14
+ * Author : Alok kamal
+ */ 
+
+/*
+   F_CPu = 8000000MHz
+   prescaler = 1
+   scl = 10KHz
+   TWBR = 98 or 0x62
+*/
+
+#define F_CPU 8000000UL
+#include "util/delay.h"
+#include <avr/io.h>
+
+void i2c_init(void)
+{
+	TWBR = 0x62; // baud rate
+	TWCR|= (1<<TWEN);
+	TWSR = 0x00;
+}
+
+void i2c_start(void)
+{
+	TWCR|= (1<<TWINT)|(1<<TWEN)|(1<<TWSTA);
+	while(!(TWCR)&(1<<TWINT));
+	
+}
+
+void i2c_write(unsigned char data)
+{
+	TWDR = data;
+	TWCR|= (1<<TWINT)|(1<<TWEN);
+	while(!(TWCR)&(1<<TWINT));
+	
+}
+
+
+unsigned char i2c_read(void)
+{
+	TWCR|= (1<<TWINT)|(1<<TWEN);
+	while(!(TWCR)&(1<<TWINT));
+	return TWDR;
+	
+}
+
+int main(void)
+{
+   DDRA = 0xFF;
+   i2c_init();
+   i2c_start();
+   i2c_write(0x40);
+   while(1)
+   {
+	 PORTA = i2c_read();
+	 _delay_ms(500);
+	
+   }
+}
